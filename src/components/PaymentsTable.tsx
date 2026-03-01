@@ -77,7 +77,7 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({ payments, isLoadin
                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{payment.customerName || I18N.EMPTY_CUSTOMER}</td>
                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{payment.currency || I18N.EMPTY_CURRENCY}</td>
                                 <td className="whitespace-nowrap px-3 py-4 text-sm">
-                                    <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${payment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                    <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ml-0 ${payment.status === 'completed' ? 'bg-green-100 text-green-800' :
                                         payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                             payment.status === 'refunded' ? 'bg-blue-100 text-blue-800' :
                                                 'bg-red-100 text-red-800'

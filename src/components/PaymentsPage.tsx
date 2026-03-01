@@ -135,7 +135,7 @@ export const PaymentsPage = () => {
         {isFilterActive && (
           <button
             type="button"
-            className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 h-[36px]"
+            className="rounded-md bg-red-100 px-3 py-2 text-sm font-semibold text-red-700 shadow-sm hover:bg-red-200 h-[38px]"
             onClick={handleClearFilters}
           >
             {I18N.CLEAR_FILTERS}
