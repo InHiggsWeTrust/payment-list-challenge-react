@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Container } from './components'
+import { Container, PaginationButton, PaginationRow } from './components'
 import { usePayments } from "../hooks/usePayments";
 import { PaymentsTable } from "./PaymentsTable";
 import { I18N } from "../constants/i18n";
@@ -9,20 +9,33 @@ export const PaymentsPage = () => {
   const [searchInput, setSearchInput] = useState("");
   const [activeSearchTerm, setActiveSearchTerm] = useState("");
   const [currency, setCurrency] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
-  const { data, isLoading, isError, error } = usePayments(1, 5, activeSearchTerm, currency);
+  const { data, isLoading, isError, error } = usePayments(currentPage, pageSize, activeSearchTerm, currency);
 
   const handleSearch = () => {
     setActiveSearchTerm(searchInput);
+    setCurrentPage(1); // Reset to page 1 on new search
   };
 
   const handleClearFilters = () => {
     setSearchInput("");
     setActiveSearchTerm("");
     setCurrency("");
+    setCurrentPage(1); // Reset to page 1 on clear
+  };
+
+  const handleCurrencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setCurrency(e.target.value);
+    setCurrentPage(1); // Reset to page 1 on filter change
   };
 
   const isFilterActive = activeSearchTerm !== "" || currency !== "";
+
+  // Calculate if we have a next page based on total results
+  const totalResults = data?.total || 0;
+  const hasNextPage = currentPage * pageSize < totalResults;
 
   return (
     <Container>
@@ -57,7 +70,7 @@ export const PaymentsPage = () => {
             className="appearance-none block w-full rounded-md border-0 py-[0.4rem] pl-3 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-blue-600 sm:text-sm sm:leading-6 bg-white h-[36px]"
             aria-label={I18N.CURRENCY_FILTER_LABEL}
             value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
+            onChange={handleCurrencyChange}
           >
             <option value="">{I18N.CURRENCIES_OPTION}</option>
             {CURRENCIES.map((c) => (
@@ -76,7 +89,7 @@ export const PaymentsPage = () => {
         {isFilterActive && (
           <button
             type="button"
-            className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 h-[36px]"
             onClick={handleClearFilters}
           >
             {I18N.CLEAR_FILTERS}
@@ -97,7 +110,33 @@ export const PaymentsPage = () => {
         </div>
       )}
 
-      <PaymentsTable payments={data?.payments || []} isLoading={isLoading} />
+      <div className="flex flex-col gap-4">
+        <PaymentsTable payments={data?.payments || []} isLoading={isLoading} />
+
+        {!isLoading && !isError && (data?.payments?.length || 0) > 0 && (
+          <PaginationRow>
+            <PaginationButton
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              aria-label={I18N.PREVIOUS_BUTTON}
+            >
+              {I18N.PREVIOUS_BUTTON}
+            </PaginationButton>
+
+            <span className="text-sm text-gray-700">
+              {I18N.PAGE_LABEL} {currentPage}
+            </span>
+
+            <PaginationButton
+              onClick={() => setCurrentPage(p => p + 1)}
+              disabled={!hasNextPage}
+              aria-label={I18N.NEXT_BUTTON}
+            >
+              {I18N.NEXT_BUTTON}
+            </PaginationButton>
+          </PaginationRow>
+        )}
+      </div>
     </Container>
   );
 };

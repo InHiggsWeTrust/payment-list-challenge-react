@@ -118,3 +118,36 @@ To implement currency filtering, we expanded our existing controlled input patte
 ### 4. Verification
 **Action**: Ran `vitest -t "Step 6:"` and `vitest -t "Step 7:"`.
 **Choice/Reasoning**: The test suite confirms the dropdown renders correctly, filters by currency alone, and handles the intersection of both search input and currency dropdown queries correctly.
+
+## Step 8: Pagination
+
+The final step required adding pagination controls to navigate through the data returned by the API.
+
+### 1. Managed Pagination State
+**Action**: Added `const [currentPage, setCurrentPage] = useState(1);` to `PaymentsPage.tsx`.
+**Choice/Reasoning**: 
+- `currentPage` dictates which page the API should fetch.
+- We passed `currentPage` directly to our `usePayments` hook. React Query automatically updates the cache and triggers a new API request whenever this value changes because `currentPage` is the first element in the hook's `queryKey`.
+
+### 2. Resetting Pages on Filter Changes
+**Action**: Updated `handleSearch`, `handleClearFilters`, and added `handleCurrencyChange`.
+**Choice/Reasoning**: 
+- If a user is on page 3 and then applies a search filter, staying on page 3 might result in an empty screen (if the search results only have 1 page). Therefore, whenever the user applies a search term, changes the currency, or clears the filters, we forcefully reset `setCurrentPage(1)` to ensure they see the first page of the new result set.
+
+### 3. Calculating the "Next" State
+**Action**: Added `const totalResults = data?.total || 0;` and `const hasNextPage = currentPage * pageSize < totalResults;`.
+**Choice/Reasoning**: 
+- The API response (`PaymentSearchResponse`) returns the `total` number of available records.
+- By multiplying the current page by the fixed page size (5), we can determine if we have viewed all available records. If `currentPage * pageSize` is still less than `totalResults`, there must be a "Next" page.
+- This calculation is used to dynamically disable the "Next" button.
+
+### 4. Built the Pagination UI
+**Action**: Added the `PaginationRow` and `PaginationButton` components below the `PaymentsTable`.
+**Choice/Reasoning**: 
+- We only render these controls if `!isLoading && !isError && data?.payments?.length > 0`. It doesn't make sense to show pagination for errors, loading screens, or entirely empty data sets.
+- The "Previous" button is strictly disabled if `currentPage === 1`.
+- The `onClick` handlers use a callback function (`p => Math.max(1, p - 1)`) to ensure state updates are strictly bound to the previous state value, preventing edge-case bugs. We also use `Math.max` as a defensive coding measure so the page can never drop below 1.
+
+### 5. Verification
+**Action**: Ran `vitest -t "Step 8:"`.
+**Choice/Reasoning**: The automated tests validated that the buttons render correctly with I18N labels, and that the "Previous" button is correctly disabled when initialized on page 1.
