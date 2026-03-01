@@ -151,3 +151,25 @@ The final step required adding pagination controls to navigate through the data 
 ### 5. Verification
 **Action**: Ran `vitest -t "Step 8:"`.
 **Choice/Reasoning**: The automated tests validated that the buttons render correctly with I18N labels, and that the "Previous" button is correctly disabled when initialized on page 1.
+
+## Step 9: URL Query Parameter Synchronization (Bonus)
+
+To make the page state shareable and persistent across refreshes, we synced our React `useState` hooks with the browser's URL using the `URLSearchParams` API.
+
+### 1. Initializing State from URL
+**Action**: Replaced the initial values in `useState` with lazily loaded initialization functions.
+**Choice/Reasoning**:
+- By parsing `window.location.search` during the initial render state using `() => { ... }`, we can extract `"search"`, `"currency"`, and `"page"` directly from the URL. 
+- If a parameter isn't present, the initialization falls back to the default empty string `""` or page `1`.
+- For the page parameter, we added an extra defensive `parseInt` wrapping, with a fallback condition `isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage` to prevent broken URLs from breaking the application. Let's say a user changes the URL manually to `?page=-5` or `?page=apple`; the application will safely correct it to `1`.
+
+### 2. Pushing State Changes to the URL
+**Action**: Added a new `useEffect` hook that listens to changes on `activeSearchTerm`, `currency`, and `currentPage`.
+**Choice/Reasoning**:
+- Inside the effect, we rebuild a `URLSearchParams` object based on the current state values.
+- If a state is truthy (or `> 1` for `currentPage`), we `set()` it. If it is falsy (meaning the user cleared the filter or reset to page 1), we `delete()` it to keep the URL as clean and short as possible.
+- Finally, we call `window.history.replaceState({}, "", newUrl)` instead of `pushState`. We chose `replaceState` here because every single typed character (although debounced) pushes state changes. Using `replaceState` prevents cluttering the user's browser back-history with dozens of minor query param updates, ensuring a smooth navigation experience.
+
+### 3. Verification
+**Action**: Ran `npm run test`.
+**Choice/Reasoning**: Ensuring that our extensive URL synchronization logic didn't accidentally break any of the requirements built up in Steps 1-8. All 11 tests continue to pass perfectly.

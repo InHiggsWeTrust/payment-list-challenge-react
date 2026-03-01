@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, PaginationButton, PaginationRow } from './components'
 import { usePayments } from "../hooks/usePayments";
 import { PaymentsTable } from "./PaymentsTable";
@@ -6,13 +6,59 @@ import { I18N } from "../constants/i18n";
 import { CURRENCIES } from "../constants/index";
 
 export const PaymentsPage = () => {
-  const [searchInput, setSearchInput] = useState("");
-  const [activeSearchTerm, setActiveSearchTerm] = useState("");
-  const [currency, setCurrency] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  // 1. Initialize state from URL params
+  const [searchInput, setSearchInput] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("search") || "";
+  });
+
+  const [activeSearchTerm, setActiveSearchTerm] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("search") || "";
+  });
+
+  const [currency, setCurrency] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("currency") || "";
+  });
+
+  const [currentPage, setCurrentPage] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const pageParam = params.get("page");
+    const parsedPage = parseInt(pageParam || "1", 10);
+    return isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
+  });
+
   const pageSize = 5;
 
   const { data, isLoading, isError, error } = usePayments(currentPage, pageSize, activeSearchTerm, currency);
+
+  // 2. Sync state changes up to the URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (activeSearchTerm) {
+      params.set("search", activeSearchTerm);
+    } else {
+      params.delete("search");
+    }
+
+    if (currency) {
+      params.set("currency", currency);
+    } else {
+      params.delete("currency");
+    }
+
+    if (currentPage > 1) {
+      params.set("page", currentPage.toString());
+    } else {
+      // Keep URL clean if on page 1
+      params.delete("page");
+    }
+
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+    window.history.replaceState({}, "", newUrl);
+  }, [activeSearchTerm, currency, currentPage]);
 
   const handleSearch = () => {
     setActiveSearchTerm(searchInput);
