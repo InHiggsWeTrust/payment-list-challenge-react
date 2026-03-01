@@ -3,12 +3,14 @@ import { Container } from './components'
 import { usePayments } from "../hooks/usePayments";
 import { PaymentsTable } from "./PaymentsTable";
 import { I18N } from "../constants/i18n";
+import { CURRENCIES } from "../constants/index";
 
 export const PaymentsPage = () => {
   const [searchInput, setSearchInput] = useState("");
   const [activeSearchTerm, setActiveSearchTerm] = useState("");
+  const [currency, setCurrency] = useState("");
 
-  const { data, isLoading, isError, error } = usePayments(1, 5, activeSearchTerm);
+  const { data, isLoading, isError, error } = usePayments(1, 5, activeSearchTerm, currency);
 
   const handleSearch = () => {
     setActiveSearchTerm(searchInput);
@@ -17,9 +19,10 @@ export const PaymentsPage = () => {
   const handleClearFilters = () => {
     setSearchInput("");
     setActiveSearchTerm("");
+    setCurrency("");
   };
 
-  const isFilterActive = activeSearchTerm !== "";
+  const isFilterActive = activeSearchTerm !== "" || currency !== "";
 
   return (
     <Container>
@@ -47,6 +50,27 @@ export const PaymentsPage = () => {
           >
             {I18N.SEARCH_BUTTON}
           </button>
+        </div>
+
+        <div className="flex items-center gap-2 relative">
+          <select
+            className="appearance-none block w-full rounded-md border-0 py-[0.4rem] pl-3 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-blue-600 sm:text-sm sm:leading-6 bg-white h-[36px]"
+            aria-label={I18N.CURRENCY_FILTER_LABEL}
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+          >
+            <option value="">{I18N.CURRENCIES_OPTION}</option>
+            {CURRENCIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+            <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </div>
         </div>
 
         {isFilterActive && (

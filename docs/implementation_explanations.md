@@ -91,3 +91,30 @@ We needed the application to robustly handle different types of API failures and
 ### 3. Verification
 **Action**: Ran `vitest -t "Step 4:"` and `vitest -t "Step 5:"`.
 **Choice/Reasoning**: This validated that typing `pay_404` and `pay_500` (which MSW intercepts to purposefully return 404 and 500 errors) correctly triggers our custom hook logic and renders the respective error strings on the screen.
+
+## Step 6 & 7: Currency Filtering & Combined Filters
+
+To implement currency filtering, we expanded our existing controlled input pattern to include a dropdown.
+
+### 1. Updated the Custom Hook
+**Action**: Added `currency = ""` as the fourth parameter to `usePayments`.
+**Choice/Reasoning**:
+- Added `currency` to the React Query `queryKey` so it tracks changes to this value.
+- Made the URL builder dynamically append `&currency=...` if a currency is provided. This naturally satisfies Step 7 (Combined Filters) because if *both* `searchTerm` and `currency` exist, the URL will simply append both query parameters (`?page=1&pageSize=5&search=foo&currency=USD`).
+
+### 2. Built the Dropdown UI
+**Action**: Added a `<select>` dropdown next to the search input in `PaymentsPage.tsx`.
+**Choice/Reasoning**:
+- We imported `CURRENCIES` from `src/constants/index.ts` to map out the `<option>` elements, adhering to the challenge rules to use constants.
+- Like the search bar, this is a controlled component tied to a new `currency` useState variable.
+- We set the `onChange` handler to immediately `setCurrency(e.target.value)`. Unlike text search, a dropdown doesn't need a "Submit" button or debouncing because selecting an option *is* the explicit user action.
+
+### 3. Handled Clear Filters Expansion
+**Action**: We updated the `isFilterActive` logic and the `handleClearFilters` function.
+**Choice/Reasoning**:
+- `isFilterActive = activeSearchTerm !== "" || currency !== ""` ensures the clear button appears if *either* filter is used.
+- Clearing now resets all three states: `searchInput`, `activeSearchTerm`, and `currency`.
+
+### 4. Verification
+**Action**: Ran `vitest -t "Step 6:"` and `vitest -t "Step 7:"`.
+**Choice/Reasoning**: The test suite confirms the dropdown renders correctly, filters by currency alone, and handles the intersection of both search input and currency dropdown queries correctly.
