@@ -36,3 +36,37 @@ To complete Step 1, we took a systematic approach focused on defensive coding, s
 **Choice/Reasoning**: We ran the automated tests specific to Step 1 to prove that our table headers rendered, our data fetched correctly, and the 5 table rows were displayed as expected.
 
 By splitting the data fetching logic (hook) from the rendering logic (table) and tying them together securely with TypeScript and I18N constants, we set a scalable architectural foundation for the rest of the steps!
+
+## Step 2 & 3: Search and Clear Filters
+
+To implement the Search capability and the Clear Filters capability, we focused on controlled inputs and debouncing API calls to prevent unnecessary network requests.
+
+### 1. Updated the Data Fetching Hook
+**Action**: Modified `usePayments` in `src/hooks/usePayments.ts` to accept a `searchTerm` parameter.
+**Choice/Reasoning**: 
+- We appended the `searchTerm` to the React Query `queryKey` (`["payments", page, pageSize, searchTerm]`). This is crucial because it tells React Query: "If the search term changes, this is a distinct query, so you must re-fetch the data."
+- We dynamically appended the `search` query parameter to the URL `fetch` call only if `searchTerm` is truthy, keeping the API call clean when no search is active.
+
+### 2. Managed State in the Smart Component
+**Action**: Added two pieces of state in `PaymentsPage.tsx`: `searchInput` and `activeSearchTerm`.
+**Choice/Reasoning**:
+- **`searchInput`**: This is tied directly to the `<input>` element. As the user types, this state updates instantly, making the input responsive (a "controlled component").
+- **`activeSearchTerm`**: This state is what is *actually* passed to the `usePayments` hook. 
+- **Why two states?** If we passed `searchInput` directly to the hook, we would fire an API request *every single time the user hit a key*. By separating them, the API call only triggers when the user explicitly clicks the "Search" button (which copies `searchInput` into `activeSearchTerm`).
+
+### 3. Built the Search UI
+**Action**: Added a text input and a 'Search' button above the table.
+**Choice/Reasoning**:
+- We heavily relied on Tailwind for styling, ensuring it matched the aesthetic of the table (`ring-1`, `shadow-sm`, focus states).
+- We added an `onKeyDown` handler to the input so pressing "Enter" also triggers the search, which is a standard accessibility/UX pattern.
+- We strictly used `I18N.SEARCH_PLACEHOLDER`, `I18N.SEARCH_LABEL`, and `I18N.SEARCH_BUTTON` for all text.
+
+### 4. Implemented Clear Filters
+**Action**: Added a conditionally rendered "Clear Filters" button in `PaymentsPage.tsx`.
+**Choice/Reasoning**:
+- **Conditional Logic**: We created a simple boolean check `const isFilterActive = activeSearchTerm !== ""`. The clear button only mounts if this is true, keeping the UI clean by default.
+- **The Clear Action**: The `handleClearFilters` function simply resets both `searchInput` and `activeSearchTerm` back to empty strings `""`. Because `activeSearchTerm` changes back to `""`, React Query automatically detects the change in the `queryKey` and re-fetches the default, unfiltered page 1 data.
+
+### 5. Verification
+**Action**: Ran `vitest -t "Step 2:"` and `vitest -t "Step 3:"`.
+**Choice/Reasoning**: This proved our `searchInput` updated correctly, the API call fired with the correct parameters, and the Clear button successfully reset the state and removed itself from the DOM.
