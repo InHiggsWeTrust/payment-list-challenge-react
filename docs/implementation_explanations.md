@@ -70,3 +70,24 @@ To implement the Search capability and the Clear Filters capability, we focused 
 ### 5. Verification
 **Action**: Ran `vitest -t "Step 2:"` and `vitest -t "Step 3:"`.
 **Choice/Reasoning**: This proved our `searchInput` updated correctly, the API call fired with the correct parameters, and the Clear button successfully reset the state and removed itself from the DOM.
+
+## Step 4 & 5: Error Handling (404 & 500)
+
+We needed the application to robustly handle different types of API failures and present clear, styled feedback to the user.
+
+### 1. Updated the Custom Hook
+**Action**: Modified the `fetch` response checking in `usePayments`.
+**Choice/Reasoning**:
+- Instead of just checking `!response.ok` and throwing a generic error, we specifically look for `response.status === 404`. If matched, we throw an error with the `I18N.PAYMENT_NOT_FOUND` string.
+- For any other non-ok response (like a 500 Internal Server error), we fall back to throwing `I18N.INTERNAL_SERVER_ERROR`.
+- **Why throw errors here?** React Query catches these thrown errors automatically. It sets the `isError` boolean to true and populates the `error` object returned from the hook with the exact message we threw.
+
+### 2. Handled UI Rendering
+**Action**: The UI was already set up to conditionally render an error alert if `isError` is true. We just ensured the layout leverages the mapped `error.message`.
+**Choice/Reasoning**: 
+- In `PaymentsPage.tsx`, the block `{isError && (...) }` catches the boolean.
+- Inside that block, we render `{error?.message || I18N.INTERNAL_SERVER_ERROR}`. Because our hook throws the exact I18N string, the UI seamlessly displays "Payment not found." or "Internal server error." depending on the API's HTTP status code.
+
+### 3. Verification
+**Action**: Ran `vitest -t "Step 4:"` and `vitest -t "Step 5:"`.
+**Choice/Reasoning**: This validated that typing `pay_404` and `pay_500` (which MSW intercepts to purposefully return 404 and 500 errors) correctly triggers our custom hook logic and renders the respective error strings on the screen.
