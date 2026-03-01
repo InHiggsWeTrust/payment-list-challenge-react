@@ -173,3 +173,25 @@ To make the page state shareable and persistent across refreshes, we synced our 
 ### 3. Verification
 **Action**: Ran `npm run test`.
 **Choice/Reasoning**: Ensuring that our extensive URL synchronization logic didn't accidentally break any of the requirements built up in Steps 1-8. All 11 tests continue to pass perfectly.
+
+## Step 10: Skeleton Loader (Bonus UI Polish)
+
+To elevate the UI from a basic "Loading" text/spinner into a modern, polished experience, we implemented a Skeleton Loader.
+
+### 1. Building the Skeleton Component
+**Action**: Created a `PaymentRowSkeleton` component inside `PaymentsTable.tsx`.
+**Choice/Reasoning**:
+- The skeleton mirrors the exact `<tr>` and `<td className="whitespace-nowrap px-3 py-4">` structure of a real data row.
+- Inside each `<td>`, we placed a `div` with Tailwind classes: `animate-pulse bg-gray-200 h-4 rounded`.
+- We varied the widths (`w-16`, `w-20`, `w-24`, `w-32`, `w-36`) specifically to match the expected content sizes of the ID, Date, Amount, Currency, Customer, and Status columns. This makes the pulsing layout feel organic and realistic.
+
+### 2. Rendering the Skeletons
+**Action**: Replaced the previous `isLoading` block at the top of the component. We now conditionally render the skeletons directly inside the `<tbody>`.
+**Choice/Reasoning**:
+- By doing `[...Array(5)].map(...)`, we generate exactly 5 skeleton rows. This matches our typical `pageSize` setting.
+- Because the skeleton rows are rendered inside the real `<table>` and `<tbody>` structure, the table headers and outer styling (shadows, rounded corners) remain visible while loading.
+- This entirely prevents "layout shift". The table doesn't disappear and reappear; it stays solidly on the page, smoothly transitioning from pulsing gray bars into real data without jumping up or down.
+
+### 3. Verification
+**Action**: Ran `npm run test` against the full test suite.
+**Choice/Reasoning**: We ensured that changing out the `isLoading` DOM node didn't break React Testing Library's ability to find the table or handle loading states in our 11 core tests. All tests pass safely.
